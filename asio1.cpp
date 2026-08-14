@@ -1,3 +1,4 @@
+#include <memory>
 #include <array>
 #include <boost/asio.hpp>
 #include <iostream>
@@ -45,43 +46,122 @@ using asio::ip::tcp;
 // }
 
 // practice
+// int main() {
+//     try {
+//         asio::io_context ioc;
+
+//         std::string host{"api.open-meteo.com"},
+//                     port{"80"},
+//                     target{"/v1/forecast?latitude=55.7512&longitude=37.6184&current_weather=true"};
+
+//         tcp::resolver resolver{ioc};
+//         auto eps{resolver.resolve(host, port)};
+
+//         tcp::socket sock{ioc};
+//         asio::connect(sock, eps);
+
+//         std::string request = // сгенерировал запрос с помощью ИИ(пока не разбираюсь в том, как их писать самому)
+//             "GET " + target + " HTTP/1.1\r\n" +
+//             "Host: " + host + "\r\n" +
+//             "User-Agent: PureAsioClient/1.0\r\n" +
+//             "Accept: */*\r\n" +
+//             "Connection: close\r\n\r\n";
+
+//         asio::write(sock, asio::buffer(request));
+    
+//         std::array<char, 4096> buffer;
+//         system::error_code ec;
+
+//         auto len = sock.read_some(asio::buffer(buffer));
+//         sock.close();
+
+//         std::cout << buffer.data() << std::endl;
+
+//     }
+//     catch(const std::exception& e) {
+//         std::cout << e.what() << std::endl;
+
+//         return 1;
+//     }
+
+//     return 0;
+// }
+
+/*
+    я больше не смог придумать практических заданий, которые будут занимать ну минут 10 максимум, чисто руки набить да запомнить че да как, поэтому сразу перейду к асинку
+*/
+
+// async
+class session: public std::enable_shared_from_this<session> {
+    std::array<char, 2048> buffer;
+    tcp::socket sock;
+
+
+    void read() {
+        sock.async_read_some(
+            asio::buffer(buffer),
+            [this, self = shared_from_this()](system::error_code ec, std::size_t len) {
+                if(!ec) write(len);
+            }
+        );
+    }
+
+    void write(const std::size_t len) {
+        asio::async_write(
+            sock,
+            asio::buffer(buffer, len),
+            [this, self = shared_from_this()](system::error_code ec, std::size_t) {
+                if(!ec) read();
+            }
+        );
+    }
+
+public:
+    session(tcp::socket&& sock): sock(std::move(sock)) {}
+
+    void start() {
+        read();
+    }
+};
+
+class server {
+    tcp::acceptor acceptor;
+
+
+    void do_accept() {
+        acceptor.async_accept(
+            [this](system::error_code ec, tcp::socket sock) {
+                std::cout << "New connection: " << sock.local_endpoint() << std::endl;
+
+                if(!ec) std::make_shared<session>(std::move(sock))->start();
+
+                do_accept();
+            }
+        );
+    }
+
+public:
+    server(asio::io_context& ioc, std::uint16_t port): acceptor(ioc, tcp::endpoint(tcp::v4(), port)) {
+        do_accept();       
+    }
+};
+
+
 int main() {
     try {
         asio::io_context ioc;
 
-        std::string host{"api.open-meteo.com"},
-                    port{"80"},
-                    target{"/v1/forecast?latitude=55.7512&longitude=37.6184&current_weather=true"};
+        server server(ioc, 1234);
 
-        tcp::resolver resolver{ioc};
-        auto eps{resolver.resolve(host, port)};
+        std::cout << "Server start listening at port 1234" << std::endl;
 
-        tcp::socket sock{ioc};
-        asio::connect(sock, eps);
-
-        std::string request = // сгенерировал запрос с помощью ИИ(пока не разбираюсь в том, как их писать самому)
-            "GET " + target + " HTTP/1.1\r\n" +
-            "Host: " + host + "\r\n" +
-            "User-Agent: PureAsioClient/1.0\r\n" +
-            "Accept: */*\r\n" +
-            "Connection: close\r\n\r\n";
-
-        asio::write(sock, asio::buffer(request));
-    
-        std::array<char, 4096> buffer; // не юзайте больше никогда streambuf)))0
-        system::error_code ec;
-
-        auto len = sock.read_some(asio::buffer(buffer));
-        sock.close();
-
-        std::cout << buffer.data() << std::endl;
-
+        ioc.run();
     }
-    catch(const std::exception& e) {
+    catch (const std::exception& e) {
         std::cout << e.what() << std::endl;
-
+    
         return 1;
     }
 
     return 0;
-}
+} // работает
