@@ -3,8 +3,8 @@ project(boosting)
 project(client)
 set(CMAKE_CXX_STANDARD 23)
 
-add_executable(boosting asio1.cpp asio2.cpp)
-add_executable(client asynclient.cpp)
+add_executable(boosting ./asio/asio1.cpp ./asio/asio2.cpp)
+add_executable(client ./asio/asynclient.cpp)
 
 find_package(Boost_asio CONFIG REQUIRED)
 target_link_libraries(boosting PRIVATE Boost::asio)
