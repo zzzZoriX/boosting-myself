@@ -1,3 +1,4 @@
+#include <chrono>
 #include <memory>
 #include <array>
 #include <boost/asio.hpp>
@@ -92,57 +93,134 @@ using asio::ip::tcp;
 */
 
 // async
-class session: public std::enable_shared_from_this<session> {
-    std::array<char, 2048> buffer;
-    tcp::socket sock;
+// class session: public std::enable_shared_from_this<session> {
+//     asio::streambuf buffer;
+//     tcp::socket sock;
 
 
-    void read() {
-        sock.async_read_some(
-            asio::buffer(buffer),
-            [this, self = shared_from_this()](system::error_code ec, std::size_t len) {
-                if(!ec) write(len);
+//     void read() {
+//         asio::async_read_until(
+//             sock,
+//             buffer,
+//             "\n",
+//             [this, self = shared_from_this()](system::error_code ec, std::size_t len) {
+//                 if(!ec) {
+//                     std::cout << "message received" << std::endl;
+
+//                     write(len);
+//                 }
+//                 else {
+//                     std::cout << ec.message() << std::endl;
+//                     return;
+//                 }
+//             }
+//         );
+//     }
+
+//     void write(const std::size_t len) {
+//         asio::async_write(
+//             sock,
+//             asio::buffer(buffer.data(), len),
+//             [this, len, self = shared_from_this()](system::error_code ec, std::size_t) {
+//                 if(!ec) {
+//                     buffer.consume(len);
+
+//                     read();
+//                 }
+//             }
+//         );
+//     }
+
+// public:
+//     session(tcp::socket&& sock): sock(std::move(sock)) {}
+
+//     void start() {
+//         read();
+//     }
+// };
+
+// class server {
+//     tcp::acceptor acceptor;
+
+
+//     void do_accept() {
+//         acceptor.async_accept(
+//             [this](system::error_code ec, tcp::socket sock) {
+//                 std::cout << "New connection: " << sock.local_endpoint() << std::endl;
+
+//                 if(!ec) std::make_shared<session>(std::move(sock))->start();
+
+//                 do_accept();
+//             }
+//         );
+//     }
+
+// public:
+//     server(asio::io_context& ioc, std::uint16_t port): acceptor(ioc, tcp::endpoint(tcp::v4(), port)) {
+//         do_accept();       
+//     }
+// };
+
+
+// int main() {
+//     try {
+//         asio::io_context ioc;
+
+//         server server(ioc, 1234);
+
+//         std::cout << "Server start listening at port 1234" << std::endl;
+
+//         ioc.run();
+//     }
+//     catch (const std::exception& e) {
+//         std::cout << e.what() << std::endl;
+    
+//         return 1;
+//     }
+
+//     return 0;
+// } // работает
+
+
+class timer_work: public std::enable_shared_from_this<timer_work> {
+    int times;
+    asio::steady_timer timer;
+    asio::io_context& ioc;
+
+
+    void iteration() {
+        std::cout << "Time remain " << times << std::endl;
+
+        if(times-- <= 0) {
+            ioc.stop();
+
+            std::cout << "Timer expired" << std::endl;
+
+            return;
+        }
+
+        timer.expires_after(std::chrono::seconds(1));
+
+        timer.async_wait([this, self = shared_from_this()](system::error_code ec){
+            if(!ec) iteration();
+            else {
+                std::cout << ec.message() << std::endl;
+
+                timer.cancel();
+
+                return;
             }
-        );
-    }
-
-    void write(const std::size_t len) {
-        asio::async_write(
-            sock,
-            asio::buffer(buffer, len),
-            [this, self = shared_from_this()](system::error_code ec, std::size_t) {
-                if(!ec) read();
-            }
-        );
+        });
     }
 
 public:
-    session(tcp::socket&& sock): sock(std::move(sock)) {}
+    timer_work(asio::io_context& ioc):  ioc(ioc),
+                                        timer(ioc) {}
 
-    void start() {
-        read();
-    }
-};
+    void start(const int times) {
+        this->times = times;
 
-class server {
-    tcp::acceptor acceptor;
-
-
-    void do_accept() {
-        acceptor.async_accept(
-            [this](system::error_code ec, tcp::socket sock) {
-                std::cout << "New connection: " << sock.local_endpoint() << std::endl;
-
-                if(!ec) std::make_shared<session>(std::move(sock))->start();
-
-                do_accept();
-            }
-        );
-    }
-
-public:
-    server(asio::io_context& ioc, std::uint16_t port): acceptor(ioc, tcp::endpoint(tcp::v4(), port)) {
-        do_accept();       
+        iteration();
     }
 };
 
@@ -151,17 +229,21 @@ int main() {
     try {
         asio::io_context ioc;
 
-        server server(ioc, 1234);
-
-        std::cout << "Server start listening at port 1234" << std::endl;
+        auto tw = std::make_shared<timer_work>(ioc);
+        tw->start(5);
 
         ioc.run();
     }
-    catch (const std::exception& e) {
-        std::cout << e.what() << std::endl;
-    
+    catch(const std::exception& e) {
+        std::cout << e.what();
+
         return 1;
     }
 
     return 0;
-} // работает
+}
+
+/*
+    задание 1.3 - выполнено
+    задание 1.1 - выполнено (изи)
+*/

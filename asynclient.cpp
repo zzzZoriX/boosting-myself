@@ -11,7 +11,7 @@ using asio::ip::tcp;
 class client: public std::enable_shared_from_this<client> {
     tcp::socket sock;
     std::array<char, 2048> buffer;
-    std::string message = "Hello!";
+    std::string message = "Hello!\n";
 
 
     void write() {
@@ -65,3 +65,7 @@ int main() {
 
     return 0;
 }
+
+/*
+    задание 1.2 - выполнено
+*/
