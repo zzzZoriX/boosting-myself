@@ -84,3 +84,132 @@ using asio::ip::tcp;
 
 //     return 0;
 // }
+
+// 2.2 -- выполнено
+class session: public std::enable_shared_from_this<session> {
+    int timeout;
+    asio::steady_timer timer;
+    tcp::socket sock;
+    asio::streambuf buffer;
+
+
+    void read() {
+        timer.expires_after(std::chrono::seconds(timeout));
+
+        timer.async_wait([this, self = shared_from_this()](system::error_code ec){
+            if(!ec) {
+                std::cout << "Client on " << sock.local_endpoint() << " disconnected: Timeout" << std::endl;
+
+                close_conn();
+
+                return;
+            }
+        });
+
+        asio::async_read_until(
+            sock,
+            buffer,
+            "\n",
+            [this, self = shared_from_this()](system::error_code ec, std::size_t len) {
+                timer.cancel();
+
+                if(!ec) {
+                    write(len);
+                }
+                else {
+                    std::cerr << ec.message() << std::endl;
+
+                    close_conn();
+                }
+            }
+        );
+    }
+
+    void write(const std::size_t len) {
+        asio::async_write(
+            sock,
+            buffer,
+            [this, self = shared_from_this()](system::error_code ec, std::size_t){
+                if(!ec) {
+                    read();
+                }
+                else {
+                    std::cout << ec.message() << std::endl;
+
+                    close_conn();
+                }
+            }
+        );
+    }
+
+    void close_conn() {
+        system::error_code close_ec;
+
+        sock.close(close_ec);
+
+        if(close_ec && close_ec != asio::error::operation_aborted)
+            std::cout << close_ec.message() << std::endl;
+    }
+
+public:
+    session(int timeout, tcp::socket&& sock, asio::io_context& ioc):    timeout(timeout),
+                                                                        sock(std::move(sock)),
+                                                                        timer(ioc) {}
+
+    void start() {
+        read();
+    }
+};
+
+class server {
+    asio::io_context& ioc;
+    tcp::acceptor acceptor;
+    int timeout;
+
+    
+    void do_accept() {
+        acceptor.async_accept([this](system::error_code ec, tcp::socket sock){
+            if(!ec) {
+                std::cout << "New connection from " << sock.local_endpoint() << std::endl;
+
+                std::make_shared<session>(timeout, std::move(sock), ioc)->start();
+                
+                do_accept();
+            }
+            else {
+                std::cout << ec.message() << std::endl;
+            }
+        });
+    }
+    
+public:
+    server(asio::io_context& ioc, const int port, const int timeout):   acceptor(ioc, tcp::endpoint(tcp::v4(), port)),
+                                                                        ioc(ioc),
+                                                                        timeout(timeout) {}
+
+    void start() {
+        std::cout << "Server starts listening on your port" << std::endl;
+
+        do_accept();
+    }
+};
+
+
+int main() {
+    try {
+        asio::io_context ioc;
+
+        server serv{ioc, 12345, 3};
+
+        serv.start();
+
+        ioc.run();
+    }
+    catch(const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+
+        return 1;
+    }
+
+    return 0;
+}
