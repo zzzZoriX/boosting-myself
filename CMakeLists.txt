@@ -3,7 +3,7 @@ project(boosting)
 project(client)
 set(CMAKE_CXX_STANDARD 23)
 
-add_executable(boosting asio1.cpp)
+add_executable(boosting asio1.cpp asio2.cpp)
 add_executable(client asynclient.cpp)
 
 find_package(Boost_asio CONFIG REQUIRED)

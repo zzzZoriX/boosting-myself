@@ -182,66 +182,66 @@ using asio::ip::tcp;
 // } // работает
 
 
-class timer_work: public std::enable_shared_from_this<timer_work> {
-    int times;
-    asio::steady_timer timer;
-    asio::io_context& ioc;
+// class timer_work: public std::enable_shared_from_this<timer_work> {
+//     int times;
+//     asio::steady_timer timer;
+//     asio::io_context& ioc;
 
 
-    void iteration() {
-        std::cout << "Time remain " << times << std::endl;
+//     void iteration() {
+//         std::cout << "Time remain " << times << std::endl;
 
-        if(times-- <= 0) {
-            ioc.stop();
+//         if(times-- <= 0) {
+//             ioc.stop();
 
-            std::cout << "Timer expired" << std::endl;
+//             std::cout << "Timer expired" << std::endl;
 
-            return;
-        }
+//             return;
+//         }
 
-        timer.expires_after(std::chrono::seconds(1));
+//         timer.expires_after(std::chrono::seconds(1));
 
-        timer.async_wait([this, self = shared_from_this()](system::error_code ec){
-            if(!ec) iteration();
-            else {
-                std::cout << ec.message() << std::endl;
+//         timer.async_wait([this, self = shared_from_this()](system::error_code ec){
+//             if(!ec) iteration();
+//             else {
+//                 std::cout << ec.message() << std::endl;
 
-                timer.cancel();
+//                 timer.cancel();
 
-                return;
-            }
-        });
-    }
+//                 return;
+//             }
+//         });
+//     }
 
-public:
-    timer_work(asio::io_context& ioc):  ioc(ioc),
-                                        timer(ioc) {}
+// public:
+//     timer_work(asio::io_context& ioc):  ioc(ioc),
+//                                         timer(ioc) {}
 
-    void start(const int times) {
-        this->times = times;
+//     void start(const int times) {
+//         this->times = times;
 
-        iteration();
-    }
-};
+//         iteration();
+//     }
+// };
 
 
-int main() {
-    try {
-        asio::io_context ioc;
+// int main() {
+//     try {
+//         asio::io_context ioc;
 
-        auto tw = std::make_shared<timer_work>(ioc);
-        tw->start(5);
+//         auto tw = std::make_shared<timer_work>(ioc);
+//         tw->start(5);
 
-        ioc.run();
-    }
-    catch(const std::exception& e) {
-        std::cout << e.what();
+//         ioc.run();
+//     }
+//     catch(const std::exception& e) {
+//         std::cout << e.what();
 
-        return 1;
-    }
+//         return 1;
+//     }
 
-    return 0;
-}
+//     return 0;
+// }
 
 /*
     задание 1.3 - выполнено
