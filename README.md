@@ -10,3 +10,7 @@ After grinding through the theory, I wrote a couple of test scripts to solidify 
 ## day 2 (3:44:14 for learning)
 Today I learned how to use asio::strand, set up a thread pool, and work with asio::steady_timer.
 I also crushed a couple of practice tasks to lock in what I learned.
+
+## day 3 (2:09:02 for learning)
+Today I got the hang of *bind_** functions, learned how to handle UDP, and figured out how to trap Linux system signals right in code.
+I also knocked out a few practice tasks to lock everything in.
