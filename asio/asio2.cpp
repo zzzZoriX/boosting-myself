@@ -383,21 +383,21 @@ public:
 };
 
 
-int main() {
-    try {
-        asio::io_context ioc;
+// int main() {
+//     try {
+//         asio::io_context ioc;
 
-        server serv{ioc, 1234};
+//         server serv{ioc, 1234};
 
-        serv.start();
+//         serv.start();
 
-        ioc.run();
-    }
-    catch(const std::exception& e) {
-        std::cout << e.what() << std::endl;
+//         ioc.run();
+//     }
+//     catch(const std::exception& e) {
+//         std::cout << e.what() << std::endl;
     
-        return 1;
-    }
+//         return 1;
+//     }
 
-    return 0;
-}
+//     return 0;
+// }
