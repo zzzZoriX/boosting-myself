@@ -217,170 +217,170 @@ using asio::ip::tcp;
 // }
 
 // 2.3 -- выполнено. это пизджец какой-то)
-class chatroom;
+// class chatroom;
 
-class session: public std::enable_shared_from_this<session> {
-    std::deque<std::string> write_queue;
+// class session: public std::enable_shared_from_this<session> {
+//     std::deque<std::string> write_queue;
 
-    tcp::socket sock;
-    std::array<char, 4096> buffer;
-    asio::strand<asio::any_io_executor> strand;
+//     tcp::socket sock;
+//     std::array<char, 4096> buffer;
+//     asio::strand<asio::any_io_executor> strand;
 
-    std::weak_ptr<chatroom> chat;
+//     std::weak_ptr<chatroom> chat;
 
 
-    void close_connection();
-    void do_write();
-    void read();
+//     void close_connection();
+//     void do_write();
+//     void read();
 
-public:
-    session(tcp::socket&& sock, std::shared_ptr<chatroom> chat):
-        sock(std::move(sock)), strand(sock.get_executor()), chat(chat)
-        {}
+// public:
+//     session(tcp::socket&& sock, std::shared_ptr<chatroom> chat):
+//         sock(std::move(sock)), strand(sock.get_executor()), chat(chat)
+//         {}
 
-    ~session() {
-        system::error_code ec;
+//     ~session() {
+//         system::error_code ec;
 
-        sock.close(ec);
-    }
+//         sock.close(ec);
+//     }
 
-    void start() {
-        read();
-    }
+//     void start() {
+//         read();
+//     }
 
-    void send(std::string message) {
-        asio::post(strand, [this, self = shared_from_this(), msg = std::move(message)](){
-            bool wip{!write_queue.empty()};
-            write_queue.push_back(std::move(msg));
+//     void send(std::string message) {
+//         asio::post(strand, [this, self = shared_from_this(), msg = std::move(message)](){
+//             bool wip{!write_queue.empty()};
+//             write_queue.push_back(std::move(msg));
 
-            if(!wip) {
-                do_write();               
-            }
-        });
-    }
+//             if(!wip) {
+//                 do_write();               
+//             }
+//         });
+//     }
 
-    tcp::endpoint get_ep() {
-        return sock.local_endpoint();
-    }
-};
+//     tcp::endpoint get_ep() {
+//         return sock.local_endpoint();
+//     }
+// };
 
-class chatroom {
-    std::set<std::shared_ptr<session>> sessions;
+// class chatroom {
+//     std::set<std::shared_ptr<session>> sessions;
     
-public:
-    void join(std::shared_ptr<session> session){
-        sessions.emplace(session);
-    }
+// public:
+//     void join(std::shared_ptr<session> session){
+//         sessions.emplace(session);
+//     }
 
-    void leave(std::shared_ptr<session> session) {
-        sessions.erase(session);
-    }
+//     void leave(std::shared_ptr<session> session) {
+//         sessions.erase(session);
+//     }
 
-    void deliver(const std::string& sender_msg, std::shared_ptr<session> sender) {
-        std::stringstream msgs;
+//     void deliver(const std::string& sender_msg, std::shared_ptr<session> sender) {
+//         std::stringstream msgs;
 
-        msgs << sender->get_ep() << ": " << sender_msg << std::endl;
+//         msgs << sender->get_ep() << ": " << sender_msg << std::endl;
 
-        std::string msg{msgs.str()};
+//         std::string msg{msgs.str()};
 
-        for(const auto& s: sessions) {
-            if(s != sender) {
-                s->send(msg);
-            }
-        }
-    }
-};
+//         for(const auto& s: sessions) {
+//             if(s != sender) {
+//                 s->send(msg);
+//             }
+//         }
+//     }
+// };
 
-void session::close_connection() {
-    system::error_code ec;
+// void session::close_connection() {
+//     system::error_code ec;
 
-    sock.close(ec);
+//     sock.close(ec);
 
-    if (ec) std::cout << ec.message() << std::endl;
+//     if (ec) std::cout << ec.message() << std::endl;
 
-    if(auto chat_ptr = chat.lock()) {
-        chat_ptr->leave(shared_from_this());
-    }
-}
+//     if(auto chat_ptr = chat.lock()) {
+//         chat_ptr->leave(shared_from_this());
+//     }
+// }
 
-void session::do_write() {
-    asio::async_write(
-        sock,
-        asio::buffer(write_queue.front()),
-        asio::bind_executor(strand, [this, self = shared_from_this()](system::error_code ec, std::size_t) {
-            if(!ec) {
-                write_queue.pop_front();
+// void session::do_write() {
+//     asio::async_write(
+//         sock,
+//         asio::buffer(write_queue.front()),
+//         asio::bind_executor(strand, [this, self = shared_from_this()](system::error_code ec, std::size_t) {
+//             if(!ec) {
+//                 write_queue.pop_front();
 
-                if(!write_queue.empty()){
-                    do_write();
-                }
-            }
-            else {
-                std::cout << ec.message() << std::endl;
+//                 if(!write_queue.empty()){
+//                     do_write();
+//                 }
+//             }
+//             else {
+//                 std::cout << ec.message() << std::endl;
 
-                write_queue.clear();
-            } 
-        })
-    );
-}
+//                 write_queue.clear();
+//             } 
+//         })
+//     );
+// }
 
-void session::read() {
-    sock.async_read_some(
-        asio::buffer(buffer),
-        [this, self = shared_from_this()](system::error_code ec, std::size_t len){
-            if (!ec){
-                std::string msg{buffer.data()};
+// void session::read() {
+//     sock.async_read_some(
+//         asio::buffer(buffer),
+//         [this, self = shared_from_this()](system::error_code ec, std::size_t len){
+//             if (!ec){
+//                 std::string msg{buffer.data()};
 
-                if(auto chat_ptr = chat.lock()) {
-                    chat_ptr->deliver(msg, shared_from_this());
-                }
+//                 if(auto chat_ptr = chat.lock()) {
+//                     chat_ptr->deliver(msg, shared_from_this());
+//                 }
 
-                read();
-            }
-            else{
-                std::cout << ec.message() << std::endl;
+//                 read();
+//             }
+//             else{
+//                 std::cout << ec.message() << std::endl;
 
-                close_connection();
-            }
-        }
-    );
-}
+//                 close_connection();
+//             }
+//         }
+//     );
+// }
 
-class server {
-    std::shared_ptr<chatroom> chat;
+// class server {
+//     std::shared_ptr<chatroom> chat;
     
-    tcp::acceptor acceptor;
-    int port;
+//     tcp::acceptor acceptor;
+//     int port;
 
 
-    void do_accept() {
-        acceptor.async_accept([this](system::error_code ec, tcp::socket sock){
-            if(!ec) {
-                std::cout << "New connection: " << sock.local_endpoint() << std::endl;
+//     void do_accept() {
+//         acceptor.async_accept([this](system::error_code ec, tcp::socket sock){
+//             if(!ec) {
+//                 std::cout << "New connection: " << sock.local_endpoint() << std::endl;
 
-                auto session_ptr = std::make_shared<session>(std::move(sock), chat);
+//                 auto session_ptr = std::make_shared<session>(std::move(sock), chat);
 
-                chat->join(session_ptr);
+//                 chat->join(session_ptr);
 
-                session_ptr->start();
+//                 session_ptr->start();
 
-                do_accept();
-            }
-            else{
-                std::cout << ec.message() << std::endl;
-            }
-        });
-    }
+//                 do_accept();
+//             }
+//             else{
+//                 std::cout << ec.message() << std::endl;
+//             }
+//         });
+//     }
 
-public:
-    server(asio::io_context& ioc, const int port):  
-        port(port), acceptor(ioc, tcp::endpoint(tcp::v4(), port)), chat(std::make_shared<chatroom>())
-        {}
+// public:
+//     server(asio::io_context& ioc, const int port):  
+//         port(port), acceptor(ioc, tcp::endpoint(tcp::v4(), port)), chat(std::make_shared<chatroom>())
+//         {}
 
-    void start() {
-        do_accept();
-    }
-};
+//     void start() {
+//         do_accept();
+//     }
+// };
 
 
 // int main() {
