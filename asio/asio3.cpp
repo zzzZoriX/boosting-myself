@@ -62,6 +62,18 @@ int main() {
 
         UDP_server serv(ioc, 1234);
 
+
+        asio::signal_set sigs{ioc, SIGINT, SIGTERM};
+        sigs.async_wait([&ioc](system::error_code ec, int signum){
+            if(!ec) {
+                std::cout << "Stop signal received. Server stoped.\nSignal number: " << signum << std::endl;
+
+                ioc.stop();
+            }
+        });
+
+        std::cout << "Server running on port 1234. Press ctrl+c to stop." << std::endl;
+        
         ioc.run();
     }
     catch(const std::exception& e) {
