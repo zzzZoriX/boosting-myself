@@ -277,137 +277,161 @@ using asio::ip::tcp;
 //     return 0;
 // }
 
-// 4.2 Парсер команд -- выполняется
-class commands_processor;
+// 4.2 Парсер команд -- выполнено
+// class commands_processor;
 
-class command: public std::enable_shared_from_this<command> {
-    tcp::socket sock;
-    asio::streambuf buffer;
+// class command: public std::enable_shared_from_this<command> {
+//     tcp::socket sock;
+//     asio::streambuf buffer;
 
-    asio::strand<asio::any_io_executor> strand;
+//     asio::strand<asio::any_io_executor> strand;
 
-    std::weak_ptr<commands_processor> cmd_proc;
-
-
-    void read();
-
-public:
-    command(asio::io_context& ioc, tcp::socket&& sock, std::shared_ptr<commands_processor> cmd_proc): 
-        sock(std::move(sock)), strand(asio::make_strand(ioc)), cmd_proc(cmd_proc) {}
-
-    void start() {
-        read();
-    }
-
-    void send(std::string msg) {
-        asio::async_write(
-            sock,
-            asio::buffer(msg),
-            asio::bind_executor(strand, [this, self = shared_from_this()](system::error_code ec, std::size_t){
-                if(ec) {
-                    std::cout << ec.message() << std::endl;
-                }
-            })
-        );
-    }
-};
-
-class commands_processor: public std::enable_shared_from_this<commands_processor> {
-    tcp::acceptor acceptor;
-    const int port;
-
-    asio::strand<asio::any_io_executor> strand;
-
-    asio::io_context& ioc;
+//     std::weak_ptr<commands_processor> cmd_proc;
 
 
-    void do_accept() {
-        acceptor.async_accept(asio::bind_executor(strand, [this](system::error_code ec, tcp::socket sock){
-            if(!ec) {
-                std::cout << "new connection" << std::endl;
+//     void read();
 
-                std::make_shared<command>(ioc, std::move(sock), shared_from_this())->start();
+// public:
+//     command(asio::io_context& ioc, tcp::socket&& sock, std::shared_ptr<commands_processor> cmd_proc): 
+//         sock(std::move(sock)), strand(asio::make_strand(ioc)), cmd_proc(cmd_proc) {}
+
+//     void start() {
+//         read();
+//     }
+
+//     void send(std::string msg) {
+//         asio::async_write(
+//             sock,
+//             asio::buffer(msg),
+//             asio::bind_executor(strand, [this, self = shared_from_this()](system::error_code ec, std::size_t){
+//                 if(ec) {
+//                     std::cout << ec.message() << std::endl;
+//                 }
+//             })
+//         );
+//     }
+// };
+
+// class commands_processor: public std::enable_shared_from_this<commands_processor> {
+//     tcp::acceptor acceptor;
+//     const int port;
+
+//     asio::strand<asio::any_io_executor> strand;
+
+//     asio::io_context& ioc;
+
+
+//     void do_accept() {
+//         acceptor.async_accept(asio::bind_executor(strand, [this](system::error_code ec, tcp::socket sock){
+//             if(!ec) {
+//                 std::cout << "new connection" << std::endl;
+
+//                 std::make_shared<command>(ioc, std::move(sock), shared_from_this())->start();
                 
-                do_accept();
-            }
-            else {
-                std::cout << ec.message() << std::endl;
-            }
-        }));
-    }
+//                 do_accept();
+//             }
+//             else {
+//                 std::cout << ec.message() << std::endl;
+//             }
+//         }));
+//     }
 
-public:
-    commands_processor(asio::io_context& ioc, const int port):
-        strand(asio::make_strand(ioc)), port(port), acceptor(ioc, tcp::endpoint(tcp::v4(), port)), ioc(ioc) {}
+// public:
+//     commands_processor(asio::io_context& ioc, const int port):
+//         strand(asio::make_strand(ioc)), port(port), acceptor(ioc, tcp::endpoint(tcp::v4(), port)), ioc(ioc) {}
 
-    void start() {
-        do_accept();
-    }
+//     void start() {
+//         do_accept();
+//     }
 
-    void process_command(std::shared_ptr<command> cmd_ptr, std::string command) {
-        std::cout << "command received: " << std::move(command);
+//     void process_command(std::shared_ptr<command> cmd_ptr, std::string command) {
+//         std::cout << "command received: " << std::move(command);
 
-        while (!command.empty() && 
-          (command.back() == '\r' || 
-           command.back() == '\n' || 
-           command.back() == ' '  || 
-           command.back() == '\t')) 
-        {
-            command.pop_back();
-        }
+//         while (!command.empty() && 
+//           (command.back() == '\r' || 
+//            command.back() == '\n' || 
+//            command.back() == ' '  || 
+//            command.back() == '\t')) 
+//         {
+//             command.pop_back();
+//         }
 
-        if(command == "QUIT" || command == "QUIT\r") {
-            asio::post(strand, [this, self = shared_from_this()]{ 
-                system::error_code close_ec;
-                acceptor.close(close_ec);
+//         if(command == "QUIT" || command == "QUIT\r") {
+//             asio::post(strand, [this, self = shared_from_this()]{ 
+//                 system::error_code close_ec;
+//                 acceptor.close(close_ec);
 
-                ioc.stop();
-            });
-        }
-        else if(command == "PING" || command == "PING\r") {
-            asio::post(strand, [this, cmd_ptr, self = shared_from_this()]{
-                cmd_ptr->send("PONG");
-            });
-        }
-    }
-};
+//                 ioc.stop();
+//             });
+//         }
+//         else if(command == "PING" || command == "PING\r") {
+//             asio::post(strand, [this, cmd_ptr, self = shared_from_this()]{
+//                 cmd_ptr->send("PONG");
+//             });
+//         }
+//     }
+// };
 
-void command::read() {
-    asio::async_read_until(
-        sock,
-        buffer,
-        "\n",
-        asio::bind_executor(strand, [this, self = shared_from_this()](system::error_code ec, std::size_t len) {
-            if(!ec) {
-                if(auto cmd_proc_ptr = cmd_proc.lock())
-                    cmd_proc_ptr->process_command(shared_from_this(), std::string(asio::buffers_begin(buffer.data()), asio::buffers_begin(buffer.data()) + len));
+// void command::read() {
+//     asio::async_read_until(
+//         sock,
+//         buffer,
+//         "\n",
+//         asio::bind_executor(strand, [this, self = shared_from_this()](system::error_code ec, std::size_t len) {
+//             if(!ec) {
+//                 if(auto cmd_proc_ptr = cmd_proc.lock())
+//                     cmd_proc_ptr->process_command(shared_from_this(), std::string(asio::buffers_begin(buffer.data()), asio::buffers_begin(buffer.data()) + len));
 
-                buffer.consume(len);
+//                 buffer.consume(len);
 
-                read();
-            }
-            else {
-                std::cout << ec.message() << std::endl;
-            }
-        })
-    );
-}
+//                 read();
+//             }
+//             else {
+//                 std::cout << ec.message() << std::endl;
+//             }
+//         })
+//     );
+// }
 
 
-int main() {
-    try {
-        asio::io_context ioc;
+// int main() {
+//     try {
+//         asio::io_context ioc;
 
-        auto proc = std::make_shared<commands_processor>(ioc, 1234);
-        proc->start();
+//         auto proc = std::make_shared<commands_processor>(ioc, 1234);
+//         proc->start();
 
-        ioc.run();
-    }
-    catch(const std::exception& e) {
-        std::cerr << e.what() << std::endl;
+//         ioc.run();
+//     }
+//     catch(const std::exception& e) {
+//         std::cerr << e.what() << std::endl;
 
-        return 1;
-    }
+//         return 1;
+//     }
 
-    return 0;
-}
+//     return 0;
+// }
+
+// 4.3 -- мини-тест
+/*
+
+1.  Почему использование глобальной фиксированной арены памяти (например, std::array<char, 1024> внутри сессии) 
+    безопасна для комбинации async_read -> async_write, но может вызвать инвалидацию/ошибку, если одновременно запустить и 
+    async_read, и async_write на одной и той же сессии?
+    --  потому что произойдет параллельное обращение к одной памяти, что может вызвать sigseg.
+    ?-  5/10
+    !-  Декапсуляция арены памяти происходит за счет флага занятости (например, bool in_use_). Если async_read и 
+        async_write запускаются одновременно, первый займет арену, а второй не поместится в нее (или перезапишет служебный блок) 
+        и вынужден будет либо фолбэкнуться в heap, либо затереть память хэндлера первой операции. Ошибка будет не только в SIGSEGV, 
+        сколько в затирании служебных данных Asio completion handler'а (Memory Corruption).
+
+2.  В какой момент Asio возвращает память аллокатору через deallocate — до вызова завершающего completion-хэндлера 
+    (твоей лямбды) или строго после его выполнения?
+    --  строго после.
+    ?-  0/10
+    !-  СТРОГО ДО вызова твоего completion-хэндлера. Asio извлекает твою лямбду из выделенного блока памяти, 
+        освобождает память (вызывает deallocate), и ТОЛЬКО ПОТОМ запускает тело самой лямбды. Именно поэтому внутри лямбды 
+        локальная арена памяти уже считается свободной, и из этой же лямбды можно сразу же запускать следующий async_read, 
+        повторно задействуя ту же самую арену памяти на стеке без новых аллокаций!
+
+*/
