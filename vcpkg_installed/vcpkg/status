@@ -504,3 +504,20 @@ Multi-Arch: same
 Description: Build with spawn (stackful coroutines) support
 Status: install ok installed
 
+Package: vcpkg-cmake-get-vars
+Version: 2025-05-29
+Depends: vcpkg-cmake
+Architecture: x64-linux
+Multi-Arch: same
+Abi: 4dd54bcdc2fab822c65005fd9012f323bb02b82e99b0b1347e941f7dbd27a034
+Status: install ok installed
+
+Package: openssl
+Version: 3.6.3
+Depends: vcpkg-cmake, vcpkg-cmake-config, vcpkg-cmake-get-vars
+Architecture: x64-linux
+Multi-Arch: same
+Abi: a12c78c4e59041ca5a6b4868f8fed7624dad3055e639bd5f10068d4de7b0bd09
+Description: OpenSSL is an open source project that provides a robust, commercial-grade, and full-featured toolkit for the Transport Layer Security (TLS) and Secure Sockets Layer (SSL) protocols. It is also a general-purpose cryptography library.
+Status: install ok installed
+
