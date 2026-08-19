@@ -4,7 +4,8 @@ project(client)
 set(CMAKE_CXX_STANDARD 23)
 
 add_executable(boosting ./asio/asio1.cpp ./asio/asio2.cpp ./asio/asio3.cpp
-    asio/asio4.cpp)
+    asio/asio4.cpp
+    asio/asio5_finale.cpp)
 add_executable(client ./asio/asynclient.cpp)
 
 find_package(Boost_asio CONFIG REQUIRED)
