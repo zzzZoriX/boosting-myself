@@ -21,3 +21,9 @@ chillllllllll
 ## day 5 (2:18:49 for learning)
 Today I learned how to build an SSL-encrypted server, leveled up my buffer management, and dived into custom allocators in Asio—how to write and wire them up, and what role they play under the hood.
 I also churned through a few hands-on tasks to lock in the material.
+
+## day 6 
+chilllllllllll
+
+## day 7 (finale of boost.asio)
+Today I took the final Boost.Asio assessment—and man, it was brutal. I completely botched a ton of it, but hey, it is what it is. On to Boost.Beast!
