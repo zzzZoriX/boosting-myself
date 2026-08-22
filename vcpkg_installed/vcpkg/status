@@ -521,3 +521,48 @@ Abi: a12c78c4e59041ca5a6b4868f8fed7624dad3055e639bd5f10068d4de7b0bd09
 Description: OpenSSL is an open source project that provides a robust, commercial-grade, and full-featured toolkit for the Transport Layer Security (TLS) and Secure Sockets Layer (SSL) protocols. It is also a general-purpose cryptography library.
 Status: install ok installed
 
+Package: boost-type-index
+Version: 1.91.0
+Depends: boost-cmake, boost-config, boost-container-hash, boost-headers, boost-throw-exception
+Architecture: x64-linux
+Multi-Arch: same
+Abi: aafeffbb1b3b9efae885ec3b453933e6575f56d062230423814ae388305f7d62
+Description: Boost type_index module
+Status: install ok installed
+
+Package: boost-static-string
+Version: 1.91.0
+Depends: boost-assert, boost-cmake, boost-config, boost-container-hash, boost-core, boost-headers, boost-throw-exception, boost-utility
+Architecture: x64-linux
+Multi-Arch: same
+Abi: 22fc8bb4918d1b67373dc364232f6b1f91428b86c617da98cfbf74007a995377
+Description: Boost static_string module
+Status: install ok installed
+
+Package: boost-logic
+Version: 1.91.0
+Depends: boost-cmake, boost-config, boost-core, boost-headers
+Architecture: x64-linux
+Multi-Arch: same
+Abi: 4875868b71ad043c770492f924c9d9846ea8af16a035f0c130b374ce2a037a88
+Description: Boost logic module
+Status: install ok installed
+
+Package: boost-endian
+Version: 1.91.0
+Depends: boost-cmake, boost-config, boost-headers
+Architecture: x64-linux
+Multi-Arch: same
+Abi: c47ca779b9fdf8ff553430b395160cc08fea4792eea804ea658c38bf7c8b995e
+Description: Boost endian module
+Status: install ok installed
+
+Package: boost-beast
+Version: 1.91.0
+Depends: boost-asio, boost-assert, boost-bind, boost-cmake, boost-config, boost-container, boost-container-hash, boost-core, boost-endian, boost-headers, boost-intrusive, boost-logic, boost-mp11, boost-optional, boost-smart-ptr, boost-static-string, boost-system, boost-throw-exception, boost-type-index, boost-type-traits, boost-winapi
+Architecture: x64-linux
+Multi-Arch: same
+Abi: 6b08d5b0a35820729048de0df063a34de691cbd097de4abdcb5d70970bfd4a28
+Description: Boost beast module
+Status: install ok installed
+

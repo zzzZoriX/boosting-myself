@@ -102,104 +102,108 @@ public:
 */
 
 // part 3 -- Практика — Проектирование модуля
-#include <vector>
-#include <thread>
-#include <chrono>
-#include <memory>
-#include <array>
-#include <boost/asio.hpp>
-#include <iostream>
-#include <string>
+// #include <vector>
+// #include <thread>
+// #include <chrono>
+// #include <memory>
+// #include <array>
+// #include <boost/asio.hpp>
+// #include <iostream>
+// #include <string>
 
-using namespace boost;
-using asio::ip::tcp;
+// using namespace boost;
+// using asio::ip::tcp;
 
-class timed_session: public std::enable_shared_from_this<timed_session> {
-    tcp::socket sock;
-    asio::strand<asio::any_io_executor> strand;
+// class timed_session: public std::enable_shared_from_this<timed_session> {
+//     tcp::socket sock;
+//     asio::strand<asio::any_io_executor> strand;
 
-    asio::steady_timer timer;
-    int timeout;
+//     asio::steady_timer timer;
+//     int timeout;
 
-    asio::streambuf buffer;
+//     asio::streambuf buffer;
 
 
-    void read() {
-        timer.expires_after(std::chrono::seconds(timeout));
-        timer.async_wait(asio::bind_executor(strand, [this, self = shared_from_this()](system::error_code ec){
-            if(!ec) {
-                std::cout << "Client disconnected. Timeout" << std::endl;
-            }
-            else if (ec && ec != asio::error::operation_aborted) {
-                std::cout << "Client disconnected by timeout, but error occured: " << ec.message() << std::endl;
-            }
+//     void read() {
+//         timer.expires_after(std::chrono::seconds(timeout));
+//         timer.async_wait(asio::bind_executor(strand, [this, self = shared_from_this()](system::error_code ec){
+//             if(!ec) {
+//                 std::cout << "Client disconnected. Timeout" << std::endl;
+//             }
+//             else if (ec && ec != asio::error::operation_aborted) {
+//                 std::cout << "Client disconnected by timeout, but error occured: " << ec.message() << std::endl;
+//             }
 
-            close_connection();
-        }));
+//             close_connection();
+//         }));
 
-        asio::async_read_until(
-            sock,
-            buffer,
-            "\n",
-            asio::bind_executor(strand, [this, self = shared_from_this()](system::error_code ec, std::size_t len){
-                if(!ec) {
-                    timer.cancel();
+//         asio::async_read_until(
+//             sock,
+//             buffer,
+//             "\n",
+//             asio::bind_executor(strand, [this, self = shared_from_this()](system::error_code ec, std::size_t len){
+//                 if(!ec) {
+//                     timer.cancel();
 
-                    std::cout << "New message received from " << sock.remote_endpoint() << std::endl;
+//                     std::cout << "New message received from " << sock.remote_endpoint() << std::endl;
 
-                    write(len);
-                }
-                else {
-                    std::cout << "Error occured while server trying receive the message from client " 
-                            << sock.remote_endpoint() << ": " << ec.message() << std::endl;
+//                     write(len);
+//                 }
+//                 else {
+//                     std::cout << "Error occured while server trying receive the message from client " 
+//                             << sock.remote_endpoint() << ": " << ec.message() << std::endl;
 
-                    close_connection();
-                }
-            })
-        );
-    }
+//                     close_connection();
+//                 }
+//             })
+//         );
+//     }
 
-    void write(std::size_t len) {
-        asio::async_write(
-            sock,
-            buffer,
-            asio::bind_executor(strand, [len, this, self = shared_from_this()](system::error_code ec, std::size_t){
-                if(!ec) {
-                    buffer.consume(len);
+//     void write(std::size_t len) {
+//         asio::async_write(
+//             sock,
+//             buffer,
+//             asio::bind_executor(strand, [len, this, self = shared_from_this()](system::error_code ec, std::size_t){
+//                 if(!ec) {
+//                     buffer.consume(len);
 
-                    std::cout << "Echo was sended correct" << std::endl;
+//                     std::cout << "Echo was sended correct" << std::endl;
 
-                    read();
-                }
-                else {
-                    std::cout << "Error occured while message sending: " << ec.message() << std::endl;
+//                     read();
+//                 }
+//                 else {
+//                     std::cout << "Error occured while message sending: " << ec.message() << std::endl;
 
-                    close_connection();
-                }
-            })
-        );
-    }
+//                     close_connection();
+//                 }
+//             })
+//         );
+//     }
 
-    void close_connection() {
-        asio::post(
-            strand, 
-            [this, self = shared_from_this()]{ 
-                system::error_code close_ec; 
-                sock.close(close_ec); 
-            }
-        );
-    }
+//     void close_connection() {
+//         asio::post(
+//             strand, 
+//             [this, self = shared_from_this()]{ 
+//                 system::error_code close_ec; 
+//                 sock.close(close_ec); 
+//             }
+//         );
+//     }
 
-public:
-    timed_session(asio::io_context& ioc, const int timeout, tcp::socket&& sock):
-        timeout(timeout), timer(ioc), strand(asio::make_strand(ioc)), sock(std::move(sock)) {}
+// public:
+//     timed_session(asio::io_context& ioc, const int timeout, tcp::socket&& sock):
+//         timeout(timeout), timer(ioc), strand(asio::make_strand(ioc)), sock(std::move(sock)) {}
 
-    void start() {
-        read();
-    }
-};
+//     void start() {
+//         read();
+//     }
+// };
 
 
 
 // итоговая - 4.4/10 
 // хуево
+
+
+
+int main() { return 0;}
